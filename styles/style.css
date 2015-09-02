@@ -1,0 +1,24 @@
+#Wrapper{
+    background-color: rgba(38, 38, 38, 1);
+}
+
+.container{
+    background-color: #ffffff;
+    padding-top: 5px;
+}
+
+body{
+    background-color: #000;
+}
+
+h2{
+    color: aliceblue;
+}
+canvas{
+    border: solid 1px #111;
+}
+
+#Map{
+    /*width: 900px;*/
+    /*height: 800px;*/
+}

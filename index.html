@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <script src="scripts/main.js" type="text/javascript"></script>
+        <script src="scripts/events.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="styles/bootstrap.min.css">
+        <link rel="stylesheet" href="styles/style.css">
+        <title>Strategy</title>
+    </head>
+    <body>
+        <div>
+            <h2>Madsad</h2>
+        </div>
+        <div id="Wrapper">
+            <div class="container">
+                <div class="row">
+                    <div id="MapPanel" class="col-lg-10">
+                        <canvas id="Map" width="900" height="600">
+                            <p>ERROR</p>
+                        </canvas>
+                    </div>
+                    <div id="ControlPanel" class="col-lg-2">
+                        <div class="buildersButtons btn btn-default btn-block"
+                               type="button"
+                               data-cellType="House"
+                               data-buildingLevel="1">
+                            House 1 lvl</div>
+                        <div class="buildersButtons btn btn-default btn-block"
+                               type="button"
+                               data-cellType="Shop"
+                               data-buildingLevel="1">
+                            Shop 1 lvl</div>
+                        <div class="buildersButtons btn btn-default btn-block"
+                               type="button"
+                               data-cellType="Road"
+                               data-buildingLevel="1">
+                            Road 1 lvl</div>
+                        <div class="removeButton btn btn-default btn-block"
+                               type="button"
+                               data-cellType="Delete">
+                            Remove</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
