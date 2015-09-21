@@ -2,8 +2,17 @@
   <dictionary name="ashab_000">
     <words>
       <w>constr</w>
+      <w>coords</w>
       <w>doesn</w>
+      <w>mousedown</w>
+      <w>mousemove</w>
+      <w>mouseover</w>
+      <w>mouseup</w>
       <w>onload</w>
+      <w>onmousedown</w>
+      <w>onmousemove</w>
+      <w>onmouseover</w>
+      <w>onmouseup</w>
     </words>
   </dictionary>
 </component>
