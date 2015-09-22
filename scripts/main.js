@@ -16,6 +16,8 @@ var BCL = (function() {
 			remove : null
 		},
 		objectList = [],
+		objectHover = null,
+		objectSelect = null,
 		fieldSize = {
 			rowsInMap : 0,
 			colInMap : 0
@@ -25,8 +27,10 @@ var BCL = (function() {
 
 	function SetCanvas(_canvas){
 		canvas = _canvas;
-
 		context = canvas.getContext('2d');
+	}
+	function GetCanvas(){
+		return canvas;
 	}
 	function SetButtonsList(_buttonsList, _type){
 		buttonsList[_type] = _buttonsList;
@@ -48,6 +52,57 @@ var BCL = (function() {
 		else
 			list.addEventListener(eventName, eventHandler, false);
 	}
+	function SetCoords(){
+		coords.positionXBegin = coordsPlaning.positionXBegin;
+		coords.positionXEnd = coordsPlaning.positionXEnd;
+		coords.positionYBegin = coordsPlaning.positionYBegin;
+		coords.positionYEnd = coordsPlaning.positionYEnd;
+	}
+	function SwapCoordsPlaning(){
+		if(coords.positionXBegin >= coords.positionXEnd) {
+			coordsPlaning.positionXEnd = coords.positionXBegin + 1;
+			coordsPlaning.positionXBegin = coords.positionXEnd - 1;
+		}
+		if(coords.positionYBegin >= coords.positionYEnd) {
+			coordsPlaning.positionYEnd = coords.positionYBegin + 1;
+			coordsPlaning.positionYBegin = coords.positionYEnd - 1;
+		}
+	}
+	function GetCoords(ev){
+		coords.positionXBegin = Math.floor(ev.offsetX / cellSize);
+		coords.positionYBegin = Math.floor(ev.offsetY / cellSize);
+		coords.positionXEnd = Math.floor(ev.offsetX / cellSize) + 1;
+		coords.positionYEnd = Math.floor(ev.offsetY / cellSize) + 1;
+	}
+	function SetCoordsPlaning(){
+		coordsPlaning.positionXBegin = coords.positionXBegin;
+		coordsPlaning.positionXEnd = coords.positionXEnd;
+		coordsPlaning.positionYBegin = coords.positionYBegin;
+		coordsPlaning.positionYEnd = coords.positionYEnd;
+	}
+	function BuildingPreSelect(ev){
+		ev.preventDefault();
+		if (!currentButton.state && !currentButton.mouseDown) {
+			GetCoords(ev);
+			var objectTemp = objectHover;
+			objectHover = BuildingMaker.prototype.getObject(coords);
+			if(objectHover != null && objectHover != objectTemp) {
+				//later this will be in a table-info
+				console.log(objectHover);
+			}
+		}
+	}
+	function BuildingSelect(ev){
+		ev.preventDefault();
+		if (!currentButton.state && !currentButton.mouseDown) {
+			GetCoords(ev);
+			objectSelect = BuildingMaker.prototype.getObject(coords);
+			if(!!objectSelect) {
+				//later this will be in a table-info
+				console.log(objectHover);
+			}
+		}
+	}
 
 //<editor-fold desc="Handlers">
 
@@ -57,7 +112,6 @@ var BCL = (function() {
 		var cellType = this.getAttribute("data-cellType");
 
 	}
-
 	function BuilderButtonClick(ev) {
 		ev.preventDefault();
 
@@ -66,23 +120,18 @@ var BCL = (function() {
 		currentButton.cellType = this.getAttribute("data-cellType");
 		currentButton.buildingLevel = parseInt(this.getAttribute("data-buildingLevel"));
 		AddEvent(canvas, "mousedown", BuildInit);
-		AddEvent(canvas, "mousemove", SetCoords);
+		AddEvent(canvas, "mousemove", BuildPlaning);
 		AddEvent(canvas, "mouseup", Build);
 	}
-
 	function BuildInit(ev) {
 		ev.preventDefault();
 		if (currentButton.state) {
 			currentButton.mouseDown = true;
-			coords.positionXBegin = Math.floor(ev.offsetX / cellSize);
-			coords.positionYBegin = Math.floor(ev.offsetY / cellSize);
-			coords.positionXEnd = Math.floor(ev.offsetX / cellSize) + 1;
-			coords.positionYEnd = Math.floor(ev.offsetY / cellSize) + 1;
+			GetCoords(ev);
 			SetCoordsPlaning();
 		}
 	}
-
-	function SetCoords(ev){
+	function BuildPlaning(ev){
 		if (currentButton.state && currentButton.mouseDown) {
 			coords.positionXEnd = Math.floor(ev.offsetX / cellSize) + 1;
 			coords.positionYEnd = Math.floor(ev.offsetY / cellSize) + 1;
@@ -90,19 +139,10 @@ var BCL = (function() {
 			SwapCoordsPlaning();
 		}
 	}
-
-	function SetCoordsPlaning(){
-		coordsPlaning.positionXBegin = coords.positionXBegin;
-		coordsPlaning.positionXEnd = coords.positionXEnd;
-		coordsPlaning.positionYBegin = coords.positionYBegin;
-		coordsPlaning.positionYEnd = coords.positionYEnd;
-	}
-
 	function Build(ev) {
 		ev.preventDefault();
 		if (currentButton.state && currentButton.mouseDown) {
-			SwapCoords();
-			console.dir(coords);
+			SetCoords();
 			if (BuildingMaker.prototype.isEmpty(coords)) {
 				var building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
 				building.save(coords);
@@ -115,31 +155,6 @@ var BCL = (function() {
 			currentButton.mouseDown = false;
 			coords = {};
 			coordsPlaning = {};
-		}
-	}
-
-	function SwapCoords(){
-		var temp;
-		if(coords.positionXBegin > coords.positionXEnd){
-			temp = coords.positionXBegin;
-			coords.positionXBegin = coords.positionXEnd - 1;
-			coords.positionXEnd = temp + 1;
-		}
-		if(coords.positionYBegin > coords.positionYEnd){
-			temp = coords.positionYBegin;
-			coords.positionYBegin = coords.positionYEnd - 1;
-			coords.positionYEnd = temp + 1;
-		}
-	}
-
-	function SwapCoordsPlaning(){
-		if(coords.positionXBegin > coords.positionXEnd) {
-			coordsPlaning.positionXEnd = coords.positionXBegin + 1;
-			coordsPlaning.positionXBegin = coords.positionXEnd - 1;
-		}
-		if(coords.positionYBegin > coords.positionYEnd) {
-			coordsPlaning.positionYEnd = coords.positionYBegin + 1;
-			coordsPlaning.positionYBegin = coords.positionYEnd - 1;
 		}
 	}
 
@@ -185,6 +200,27 @@ var BCL = (function() {
 		}
 	}
 
+	function DrawPreSelect(){
+		if (!!objectHover) {
+			var coords = objectHover.coords;
+			context.fillStyle = 'rgba(192,192,192,0.3)';
+			context.fillRect(coords.positionXBegin * cellSize,
+				coords.positionYBegin * cellSize,
+				(coords.positionXEnd - coords.positionXBegin) * cellSize,
+				(coords.positionYEnd - coords.positionYBegin) * cellSize);
+		}
+	}
+	function DrawSelect(){
+		if (!!objectSelect) {
+			var coords = objectSelect.coords;
+			context.fillStyle = 'rgba(192,192,192,0.3)';
+			context.fillRect(coords.positionXBegin * cellSize,
+				coords.positionYBegin * cellSize,
+				(coords.positionXEnd - coords.positionXBegin) * cellSize,
+				(coords.positionYEnd - coords.positionYBegin) * cellSize);
+		}
+	}
+
 // GAME LOOP
 	function Draw() {
 		var requestAnimationFrame = window.requestAnimationFrame ||
@@ -202,6 +238,8 @@ var BCL = (function() {
 		DrawMap();
 		DrawObjects();
 		DrawBuildPlaning();
+		DrawPreSelect();
+		DrawSelect();
 	}
 
 	//function CreateMapMask() {
@@ -249,6 +287,19 @@ var BCL = (function() {
 		objectList.push(this);
 		console.dir(objectList);
 		//localStorage.mapMask.push(this);
+	};
+	BuildingMaker.prototype.getObject = function (coords) {
+		for (var i = 0, len = objectList.length; i < len; i++) {
+			if (
+				objectList[i].coords.positionXBegin < coords.positionXEnd &&
+				objectList[i].coords.positionXEnd > coords.positionXBegin &&
+				objectList[i].coords.positionYEnd > coords.positionYBegin &&
+				objectList[i].coords.positionYBegin < coords.positionYEnd
+			) {
+				return objectList[i];
+			}
+		}
+		return null;
 	};
 	BuildingMaker.prototype.isEmpty = function (coords) {
 		for (var i = 0, len = objectList.length; i < len; i++) {
@@ -322,6 +373,7 @@ var BCL = (function() {
 
 	return{
 		SetCanvas: SetCanvas,
+		GetCanvas: GetCanvas,
 		AddEvent: AddEvent,
 		SetButtonsList: SetButtonsList,
 		GetButtonsList: GetButtonsList,
@@ -329,6 +381,8 @@ var BCL = (function() {
 		RemoveButtonClick: RemoveButtonClick,
 		SetFieldSize: SetFieldSize,
 		Draw: Draw,
+		BuildingPreSelect: BuildingPreSelect,
+		BuildingSelect: BuildingSelect,
 		objectList: objectList
 	}
 })();
