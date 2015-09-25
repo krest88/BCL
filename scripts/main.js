@@ -213,6 +213,7 @@ var BCL = (function() {
 
 					for (var i = 0, len = width == 1? height: width; i < len; i++) {
 						building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
+						tempObj = null;
 
 						if(width > height){
 							_positionXBegin = coords.positionXBegin + i;
@@ -234,20 +235,26 @@ var BCL = (function() {
 								});
 							}
 							else if(i==0){
-								building.mount.right = BuildingMaker.prototype.getObject({
+								tempObj = BuildingMaker.prototype.getObject({
 									positionXBegin: _positionXBegin + i,
 									positionXEnd: _positionXEnd + i + 1,
 									positionYBegin: _positionYBegin,
 									positionYEnd: _positionYEnd
 								});
+								if(tempObj != null &&tempObj.type == 'Road'){
+									building.mount.right = tempObj;
+								}
 							}
 							else{
-								building.mount.left = BuildingMaker.prototype.getObject({
+								tempObj = BuildingMaker.prototype.getObject({
 									positionXBegin: _positionXBegin - i,
 									positionXEnd: _positionXEnd - i - 1,
 									positionYBegin: _positionYBegin,
 									positionYEnd: _positionYEnd
 								});
+								if(tempObj != null &&tempObj.type == 'Road'){
+									building.mount.left = tempObj;
+								}
 							}
 						}
 						else if(width < height){
@@ -271,20 +278,26 @@ var BCL = (function() {
 								});
 							}
 							else if(i==0){
-								building.mount.bottom = BuildingMaker.prototype.getObject({
+								tempObj = BuildingMaker.prototype.getObject({
 									positionXBegin: _positionXBegin,
 									positionXEnd: _positionXEnd,
 									positionYBegin: _positionYBegin + i,
 									positionYEnd: _positionYEnd + i + 1
 								});
+								if(tempObj != null &&tempObj.type == 'Road'){
+									building.mount.bottom = tempObj;
+								}
 							}
 							else{
-								building.mount.top = BuildingMaker.prototype.getObject({
+								tempObj = BuildingMaker.prototype.getObject({
 									positionXBegin: _positionXBegin,
 									positionXEnd: _positionXEnd,
 									positionYBegin: _positionYBegin - i,
 									positionYEnd: _positionYEnd - i - 1
 								});
+								if(tempObj != null &&tempObj.type == 'Road'){
+									building.mount.top = tempObj;
+								}
 							}
 						}
 						building.save({
@@ -296,71 +309,77 @@ var BCL = (function() {
 
 						if(!BuildingMaker.prototype.isEmpty({
 								positionXBegin: building.coords.positionXBegin - 1,
-								positionXEnd: building.coords.positionXEnd,
+								positionXEnd: building.coords.positionXEnd - 1,
 								positionYBegin: building.coords.positionYBegin,
 								positionYEnd: building.coords.positionYEnd
 							})){
 							tempObj = BuildingMaker.prototype.getObject({
 								positionXBegin: building.coords.positionXBegin - 1,
-								positionXEnd: building.coords.positionXEnd,
+								positionXEnd: building.coords.positionXEnd - 1,
 								positionYBegin: building.coords.positionYBegin,
 								positionYEnd: building.coords.positionYEnd
 							});
-
-							tempObj.mount.right = BuildingMaker.prototype.getObject(building.coords);
-							tempObj.mount.right.mount.left = tempObj;
+							if(tempObj.type == 'Road') {
+								tempObj.mount.right = BuildingMaker.prototype.getObject(building.coords);
+								tempObj.mount.right.mount.left = tempObj;
+							}
 						}
 						if(!BuildingMaker.prototype.isEmpty({
-								positionXBegin: building.coords.positionXBegin,
+								positionXBegin: building.coords.positionXBegin + 1,
 								positionXEnd: building.coords.positionXEnd + 1,
 								positionYBegin: building.coords.positionYBegin,
 								positionYEnd: building.coords.positionYEnd
 							})){
 							tempObj = BuildingMaker.prototype.getObject({
-								positionXBegin: building.coords.positionXBegin,
+								positionXBegin: building.coords.positionXBegin + 1,
 								positionXEnd: building.coords.positionXEnd + 1,
 								positionYBegin: building.coords.positionYBegin,
 								positionYEnd: building.coords.positionYEnd
 							});
-
-							tempObj.mount.left = BuildingMaker.prototype.getObject(building.coords);
-							tempObj.mount.left.mount.right = tempObj;
+							if(tempObj.type == 'Road') {
+								tempObj.mount.left = BuildingMaker.prototype.getObject(building.coords);
+								tempObj.mount.left.mount.right = tempObj;
+							}
 						}
 						if(!BuildingMaker.prototype.isEmpty({
 								positionXBegin: building.coords.positionXBegin,
 								positionXEnd: building.coords.positionXEnd,
 								positionYBegin: building.coords.positionYBegin - 1,
-								positionYEnd: building.coords.positionYEnd
+								positionYEnd: building.coords.positionYEnd - 1
 							})){
 							tempObj = BuildingMaker.prototype.getObject({
 								positionXBegin: building.coords.positionXBegin,
 								positionXEnd: building.coords.positionXEnd,
 								positionYBegin: building.coords.positionYBegin - 1,
-								positionYEnd: building.coords.positionYEnd
+								positionYEnd: building.coords.positionYEnd - 1
 							});
-
-							tempObj.mount.bottom = BuildingMaker.prototype.getObject(building.coords);
-							tempObj.mount.bottom.mount.top = tempObj;
+							if(tempObj.type == 'Road') {
+								tempObj.mount.bottom = BuildingMaker.prototype.getObject(building.coords);
+								tempObj.mount.bottom.mount.top = tempObj;
+							}
 						}
 						if(!BuildingMaker.prototype.isEmpty({
 								positionXBegin: building.coords.positionXBegin,
 								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin,
+								positionYBegin: building.coords.positionYBegin + 1,
 								positionYEnd: building.coords.positionYEnd + 1
 							})){
 							tempObj = BuildingMaker.prototype.getObject({
 								positionXBegin: building.coords.positionXBegin,
 								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin,
+								positionYBegin: building.coords.positionYBegin + 1,
 								positionYEnd: building.coords.positionYEnd + 1
 							});
-
-							tempObj.mount.top = BuildingMaker.prototype.getObject(building.coords);
-							tempObj.mount.top.mount.bottom = tempObj;
+							if(tempObj.type == 'Road') {
+								tempObj.mount.top = BuildingMaker.prototype.getObject(building.coords);
+								tempObj.mount.top.mount.bottom = tempObj;
+							}
 						}
-
-						tempObj = null;
 					}
+
+					tempObj = null;
+					width = null;
+					height = null;
 				}
 			}
 			else {
