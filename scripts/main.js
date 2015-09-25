@@ -13,7 +13,8 @@ var BCL = (function() {
 		canvas = null,
 		buttonsList = {
 			build : null,
-			remove : null
+			remove : null,
+			clear : null
 		},
 		objectList = [],
 		objectHover = null,
@@ -25,6 +26,18 @@ var BCL = (function() {
 		context = null;
 
 
+	function SetObjectList(){
+		if(typeof localStorage['objectList'] != 'undefined'){
+			//objectList = JSON.parse(localStorage['objectList']);
+		}
+		else{
+			objectList = [];
+		}
+	}
+	function ClearField(){
+		objectList = [];
+		//localStorage.removeItem('objectList');
+	}
 	function SetCanvas(_canvas){
 		canvas = _canvas;
 		context = canvas.getContext('2d');
@@ -51,6 +64,16 @@ var BCL = (function() {
 			}
 		else
 			list.addEventListener(eventName, eventHandler, false);
+	}
+	function RemoveEvent(list, eventName, eventHandler){
+		if(list.length)
+			for (var i = 0, len = list.length; i < len; i++) {
+				(function (index) {
+					list[index].removeEventListener(eventName, eventHandler, false);
+				})(i);
+			}
+		else
+			list.removeEventListener(eventName, eventHandler, false);
 	}
 	function SetCoords(){
 		coords.positionXBegin = coordsPlaning.positionXBegin;
@@ -80,26 +103,45 @@ var BCL = (function() {
 		coordsPlaning.positionYBegin = coords.positionYBegin;
 		coordsPlaning.positionYEnd = coords.positionYEnd;
 	}
-	function BuildingPreSelect(ev){
+	function Remove(ev){
 		ev.preventDefault();
-		if (!currentButton.state && !currentButton.mouseDown) {
+		if(currentButton.state){
 			GetCoords(ev);
-			var objectTemp = objectHover;
-			objectHover = BuildingMaker.prototype.getObject(coords);
-			if(objectHover != null && objectHover != objectTemp) {
-				//later this will be in a table-info
-				console.log(objectHover);
-			}
+			BuildingMaker.prototype.removeObject(coords);
+
+			currentButton.state = false;
+			RemoveEvent(canvas, "click", Remove);
 		}
 	}
-	function BuildingSelect(ev){
-		ev.preventDefault();
-		if (!currentButton.state && !currentButton.mouseDown) {
-			GetCoords(ev);
-			objectSelect = BuildingMaker.prototype.getObject(coords);
-			if(!!objectSelect) {
-				//later this will be in a table-info
-				console.log(objectHover);
+	function BuildPlaningRoad(){
+		//create road with width = 1 cell;
+		if(currentButton.cellType == 'Road') {
+			var xLength = coords.positionXEnd - coords.positionXBegin;
+			var yLength = coords.positionYEnd - coords.positionYBegin;
+			var isNegative = {
+				x: false,
+				y: false
+			};
+			isNegative.x = xLength < 0;
+			isNegative.y = yLength < 0;
+			if(!isNegative.x && !isNegative.y ||
+				isNegative.x && isNegative.y) {
+				if ((yLength / xLength) < Math.PI / 4) {
+					coords.positionYEnd = coords.positionYBegin + 1;
+				}
+				else {
+					coords.positionXEnd = coords.positionXBegin + 1;
+					console.log('1. coords', coords);
+				}
+			}
+			else if(isNegative.x || isNegative.y){
+				if (-(yLength / xLength) < Math.PI / 4) {
+					coords.positionYEnd = coords.positionYBegin + 1;
+				}
+				else {
+					coords.positionXEnd = coords.positionXBegin + 1;
+					console.log('2. coords', coords);
+				}
 			}
 		}
 	}
@@ -109,12 +151,14 @@ var BCL = (function() {
 	function RemoveButtonClick(ev) {
 		ev.preventDefault();
 
-		var cellType = this.getAttribute("data-cellType");
+		coords = {};
+		currentButton.state = true;
+		currentButton.cellType = this.getAttribute("data-cellType");
+		AddEvent(canvas, "click", Remove);
 
 	}
 	function BuilderButtonClick(ev) {
 		ev.preventDefault();
-
 		coords = {};
 		currentButton.state = true;
 		currentButton.cellType = this.getAttribute("data-cellType");
@@ -135,6 +179,14 @@ var BCL = (function() {
 		if (currentButton.state && currentButton.mouseDown) {
 			coords.positionXEnd = Math.floor(ev.offsetX / cellSize) + 1;
 			coords.positionYEnd = Math.floor(ev.offsetY / cellSize) + 1;
+
+			console.log(coords.positionXEnd, coords.positionYEnd);
+
+
+			BuildPlaningRoad();
+
+
+
 			SetCoordsPlaning();
 			SwapCoordsPlaning();
 		}
@@ -144,17 +196,209 @@ var BCL = (function() {
 		if (currentButton.state && currentButton.mouseDown) {
 			SetCoords();
 			if (BuildingMaker.prototype.isEmpty(coords)) {
-				var building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
-				building.save(coords);
+				var building;
+				if(currentButton.cellType != 'Road'){
+					building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
+					building.save(coords);
+				}
+				else{
+					var width = coords.positionXEnd - coords.positionXBegin;
+					var height = coords.positionYEnd - coords.positionYBegin;
+					var _positionXBegin = coords.positionXBegin,
+						_positionXEnd = coords.positionXEnd,
+						_positionYBegin = coords.positionYBegin,
+						_positionYEnd = coords.positionYEnd,
+						tempObj = null;
+
+
+					for (var i = 0, len = width == 1? height: width; i < len; i++) {
+						building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
+
+						if(width > height){
+							_positionXBegin = coords.positionXBegin + i;
+							_positionXEnd = coords.positionXBegin + i + 1;
+
+							if(i!=0 && i!=(len-1)){
+								building.mount.left = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin - i,
+									positionXEnd: _positionXEnd - i - 1,
+									positionYBegin: _positionYBegin,
+									positionYEnd: _positionYEnd
+								});
+
+								building.mount.right = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin + i,
+									positionXEnd: _positionXEnd + i + 1,
+									positionYBegin: _positionYBegin,
+									positionYEnd: _positionYEnd
+								});
+							}
+							else if(i==0){
+								building.mount.right = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin + i,
+									positionXEnd: _positionXEnd + i + 1,
+									positionYBegin: _positionYBegin,
+									positionYEnd: _positionYEnd
+								});
+							}
+							else{
+								building.mount.left = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin - i,
+									positionXEnd: _positionXEnd - i - 1,
+									positionYBegin: _positionYBegin,
+									positionYEnd: _positionYEnd
+								});
+							}
+						}
+						else if(width < height){
+							_positionYBegin = coords.positionYBegin + i;
+							_positionYEnd = coords.positionYBegin + i + 1;
+
+
+							if(i!=0 && i!=(len-1)){
+								building.mount.top = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin,
+									positionXEnd: _positionXEnd,
+									positionYBegin: _positionYBegin - i,
+									positionYEnd: _positionYEnd - i - 1
+								});
+
+								building.mount.bottom = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin,
+									positionXEnd: _positionXEnd,
+									positionYBegin: _positionYBegin + i,
+									positionYEnd: _positionYEnd + i + 1
+								});
+							}
+							else if(i==0){
+								building.mount.bottom = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin,
+									positionXEnd: _positionXEnd,
+									positionYBegin: _positionYBegin + i,
+									positionYEnd: _positionYEnd + i + 1
+								});
+							}
+							else{
+								building.mount.top = BuildingMaker.prototype.getObject({
+									positionXBegin: _positionXBegin,
+									positionXEnd: _positionXEnd,
+									positionYBegin: _positionYBegin - i,
+									positionYEnd: _positionYEnd - i - 1
+								});
+							}
+						}
+						building.save({
+							positionXBegin: _positionXBegin,
+							positionXEnd: _positionXEnd,
+							positionYBegin: _positionYBegin,
+							positionYEnd: _positionYEnd
+						});
+
+						if(!BuildingMaker.prototype.isEmpty({
+								positionXBegin: building.coords.positionXBegin - 1,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd
+							})){
+							tempObj = BuildingMaker.prototype.getObject({
+								positionXBegin: building.coords.positionXBegin - 1,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd
+							});
+
+							tempObj.mount.right = BuildingMaker.prototype.getObject(building.coords);
+							tempObj.mount.right.mount.left = tempObj;
+						}
+						if(!BuildingMaker.prototype.isEmpty({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd + 1,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd
+							})){
+							tempObj = BuildingMaker.prototype.getObject({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd + 1,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd
+							});
+
+							tempObj.mount.left = BuildingMaker.prototype.getObject(building.coords);
+							tempObj.mount.left.mount.right = tempObj;
+						}
+						if(!BuildingMaker.prototype.isEmpty({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin - 1,
+								positionYEnd: building.coords.positionYEnd
+							})){
+							tempObj = BuildingMaker.prototype.getObject({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin - 1,
+								positionYEnd: building.coords.positionYEnd
+							});
+
+							tempObj.mount.bottom = BuildingMaker.prototype.getObject(building.coords);
+							tempObj.mount.bottom.mount.top = tempObj;
+						}
+						if(!BuildingMaker.prototype.isEmpty({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd + 1
+							})){
+							tempObj = BuildingMaker.prototype.getObject({
+								positionXBegin: building.coords.positionXBegin,
+								positionXEnd: building.coords.positionXEnd,
+								positionYBegin: building.coords.positionYBegin,
+								positionYEnd: building.coords.positionYEnd + 1
+							});
+
+							tempObj.mount.top = BuildingMaker.prototype.getObject(building.coords);
+							tempObj.mount.top.mount.bottom = tempObj;
+						}
+
+						tempObj = null;
+					}
+				}
 			}
 			else {
 				alert('Sorry, this cell is occupied. Remove contents and add new building');
 				console.log('Sorry, this cell is occupied. Remove contents and add new building');
 			}
 			currentButton.state = false;
+			currentButton.cellType = null;
+			currentButton.buildingLevel = null;
 			currentButton.mouseDown = false;
 			coords = {};
 			coordsPlaning = {};
+			RemoveEvent(canvas, "mousedown", BuildInit);
+			RemoveEvent(canvas, "mousemove", BuildPlaning);
+			RemoveEvent(canvas, "mouseup", Build);
+		}
+	}
+	function BuildingPreSelect(ev){
+		ev.preventDefault();
+		if (!currentButton.state && !currentButton.mouseDown) {
+			GetCoords(ev);
+			var objectTemp = objectHover;
+			objectHover = BuildingMaker.prototype.getObject(coords);
+			if(objectHover != null && objectHover != objectTemp) {
+				//later this will be in a table-info
+				//console.log(objectHover);
+			}
+		}
+	}
+	function BuildingSelect(ev){
+		ev.preventDefault();
+		if (!currentButton.state && !currentButton.mouseDown) {
+			GetCoords(ev);
+			objectSelect = BuildingMaker.prototype.getObject(coords);
+			if(!!objectSelect) {
+				//later this will be in a table-info
+				console.log(objectSelect);
+			}
 		}
 	}
 
@@ -201,7 +445,7 @@ var BCL = (function() {
 	}
 
 	function DrawPreSelect(){
-		if (!!objectHover) {
+		if (!!objectHover && objectHover != objectSelect ) {
 			var coords = objectHover.coords;
 			context.fillStyle = 'rgba(192,192,192,0.3)';
 			context.fillRect(coords.positionXBegin * cellSize,
@@ -285,8 +529,9 @@ var BCL = (function() {
 	BuildingMaker.prototype.save = function (coords) {
 		this.coords = coords;
 		objectList.push(this);
+
 		console.dir(objectList);
-		//localStorage.mapMask.push(this);
+		//localStorage['objectList'] = JSON.stringify(objectList);
 	};
 	BuildingMaker.prototype.getObject = function (coords) {
 		for (var i = 0, len = objectList.length; i < len; i++) {
@@ -300,6 +545,20 @@ var BCL = (function() {
 			}
 		}
 		return null;
+	};
+	BuildingMaker.prototype.removeObject = function(coords){
+		for (var i = 0, len = objectList.length; i < len; i++) {
+			if (
+				objectList[i].coords.positionXBegin < coords.positionXEnd &&
+				objectList[i].coords.positionXEnd > coords.positionXBegin &&
+				objectList[i].coords.positionYEnd > coords.positionYBegin &&
+				objectList[i].coords.positionYBegin < coords.positionYEnd
+			) {
+				objectList.splice(i, 1);
+				return true;
+			}
+		}
+		return false;
 	};
 	BuildingMaker.prototype.isEmpty = function (coords) {
 		for (var i = 0, len = objectList.length; i < len; i++) {
@@ -361,6 +620,14 @@ var BCL = (function() {
 		this.type = type;
 		this.coeff = 0.2;
 		this.lvl = lvl;
+
+		this.mount = {
+			top: null,
+			right: null,
+			bottom: null,
+			left: null
+		};
+
 		this.coords = {
 			positionXBegin: 0,
 			positionXEnd: 0,
@@ -383,6 +650,8 @@ var BCL = (function() {
 		Draw: Draw,
 		BuildingPreSelect: BuildingPreSelect,
 		BuildingSelect: BuildingSelect,
+		SetObjectList: SetObjectList,
+		ClearField: ClearField,
 		objectList: objectList
 	}
 })();

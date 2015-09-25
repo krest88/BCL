@@ -16,6 +16,12 @@ window.onload = function() {
 
 
 	//start!
+	BCL.SetObjectList();
 	BCL.Draw();
+
+
+	//developer`s instruments
+	BCL.SetButtonsList(document.getElementsByClassName("clearButton"), 'clear');
+	BCL.AddEvent(BCL.GetButtonsList('clear'), "click", BCL.ClearField);
 };
 
