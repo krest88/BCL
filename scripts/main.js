@@ -23,6 +23,10 @@ var BCL = (function() {
 			rowsInMap : 0,
 			colInMap : 0
 		},
+		temp = {
+			object : {},
+			coords : {}
+		},
 		context = null;
 
 
@@ -204,180 +208,72 @@ var BCL = (function() {
 				else{
 					var width = coords.positionXEnd - coords.positionXBegin;
 					var height = coords.positionYEnd - coords.positionYBegin;
-					var _positionXBegin = coords.positionXBegin,
-						_positionXEnd = coords.positionXEnd,
-						_positionYBegin = coords.positionYBegin,
-						_positionYEnd = coords.positionYEnd,
-						tempObj = null;
+					temp.coords.positionXBegin = coords.positionXBegin;
+					temp.coords.positionXEnd = coords.positionXEnd;
+					temp.coords.positionYBegin = coords.positionYBegin;
+					temp.coords.positionYEnd = coords.positionYEnd;
 
 
 					for (var i = 0, len = width == 1? height: width; i < len; i++) {
 						building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
-						tempObj = null;
 
 						if(width > height){
-							_positionXBegin = coords.positionXBegin + i;
-							_positionXEnd = coords.positionXBegin + i + 1;
+							temp.coords.positionXBegin = coords.positionXBegin + i;
+							temp.coords.positionXEnd = coords.positionXBegin + i + 1;
 
 							if(i!=0 && i!=(len-1)){
-								building.mount.left = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin - i,
-									positionXEnd: _positionXEnd - i - 1,
-									positionYBegin: _positionYBegin,
-									positionYEnd: _positionYEnd
-								});
-
-								building.mount.right = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin + i,
-									positionXEnd: _positionXEnd + i + 1,
-									positionYBegin: _positionYBegin,
-									positionYEnd: _positionYEnd
-								});
+								building.mount.left = building.addMount('Road', 'left', temp.coords);
+								building.mount.right = building.addMount('Road', 'right', temp.coords);
 							}
 							else if(i==0){
-								tempObj = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin + i,
-									positionXEnd: _positionXEnd + i + 1,
-									positionYBegin: _positionYBegin,
-									positionYEnd: _positionYEnd
-								});
-								if(tempObj != null &&tempObj.type == 'Road'){
-									building.mount.right = tempObj;
-								}
+								building.mount.right = building.addMount('Road', 'right', temp.coords);
 							}
 							else{
-								tempObj = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin - i,
-									positionXEnd: _positionXEnd - i - 1,
-									positionYBegin: _positionYBegin,
-									positionYEnd: _positionYEnd
-								});
-								if(tempObj != null &&tempObj.type == 'Road'){
-									building.mount.left = tempObj;
-								}
+								building.mount.left = building.addMount('Road', 'left', temp.coords);
 							}
 						}
 						else if(width < height){
-							_positionYBegin = coords.positionYBegin + i;
-							_positionYEnd = coords.positionYBegin + i + 1;
+							temp.coords.positionYBegin = coords.positionYBegin + i;
+							temp.coords.positionYEnd = coords.positionYBegin + i + 1;
 
 
 							if(i!=0 && i!=(len-1)){
-								building.mount.top = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin,
-									positionXEnd: _positionXEnd,
-									positionYBegin: _positionYBegin - i,
-									positionYEnd: _positionYEnd - i - 1
-								});
-
-								building.mount.bottom = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin,
-									positionXEnd: _positionXEnd,
-									positionYBegin: _positionYBegin + i,
-									positionYEnd: _positionYEnd + i + 1
-								});
+								building.mount.top = building.addMount('Road', 'top', temp.coords);
+								building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
 							}
 							else if(i==0){
-								tempObj = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin,
-									positionXEnd: _positionXEnd,
-									positionYBegin: _positionYBegin + i,
-									positionYEnd: _positionYEnd + i + 1
-								});
-								if(tempObj != null &&tempObj.type == 'Road'){
-									building.mount.bottom = tempObj;
-								}
+								building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
 							}
 							else{
-								tempObj = BuildingMaker.prototype.getObject({
-									positionXBegin: _positionXBegin,
-									positionXEnd: _positionXEnd,
-									positionYBegin: _positionYBegin - i,
-									positionYEnd: _positionYEnd - i - 1
-								});
-								if(tempObj != null &&tempObj.type == 'Road'){
-									building.mount.top = tempObj;
-								}
+								building.mount.top = building.addMount('Road', 'top', temp.coords);
 							}
 						}
-						building.save({
-							positionXBegin: _positionXBegin,
-							positionXEnd: _positionXEnd,
-							positionYBegin: _positionYBegin,
-							positionYEnd: _positionYEnd
-						});
 
-						if(!BuildingMaker.prototype.isEmpty({
-								positionXBegin: building.coords.positionXBegin - 1,
-								positionXEnd: building.coords.positionXEnd - 1,
-								positionYBegin: building.coords.positionYBegin,
-								positionYEnd: building.coords.positionYEnd
-							})){
-							tempObj = BuildingMaker.prototype.getObject({
-								positionXBegin: building.coords.positionXBegin - 1,
-								positionXEnd: building.coords.positionXEnd - 1,
-								positionYBegin: building.coords.positionYBegin,
-								positionYEnd: building.coords.positionYEnd
-							});
-							if(tempObj.type == 'Road') {
-								tempObj.mount.right = BuildingMaker.prototype.getObject(building.coords);
-								tempObj.mount.right.mount.left = tempObj;
+							building.mount.right = building.addMount('Road', 'right', temp.coords);
+							if (!!building.mount.right) {
+								building.mount.right.mount.left = building;
 							}
-						}
-						if(!BuildingMaker.prototype.isEmpty({
-								positionXBegin: building.coords.positionXBegin + 1,
-								positionXEnd: building.coords.positionXEnd + 1,
-								positionYBegin: building.coords.positionYBegin,
-								positionYEnd: building.coords.positionYEnd
-							})){
-							tempObj = BuildingMaker.prototype.getObject({
-								positionXBegin: building.coords.positionXBegin + 1,
-								positionXEnd: building.coords.positionXEnd + 1,
-								positionYBegin: building.coords.positionYBegin,
-								positionYEnd: building.coords.positionYEnd
-							});
-							if(tempObj.type == 'Road') {
-								tempObj.mount.left = BuildingMaker.prototype.getObject(building.coords);
-								tempObj.mount.left.mount.right = tempObj;
+							building.mount.left = building.addMount('Road', 'left', temp.coords);
+							if (!!building.mount.left) {
+								building.mount.left.mount.right = building;
 							}
-						}
-						if(!BuildingMaker.prototype.isEmpty({
-								positionXBegin: building.coords.positionXBegin,
-								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin - 1,
-								positionYEnd: building.coords.positionYEnd - 1
-							})){
-							tempObj = BuildingMaker.prototype.getObject({
-								positionXBegin: building.coords.positionXBegin,
-								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin - 1,
-								positionYEnd: building.coords.positionYEnd - 1
-							});
-							if(tempObj.type == 'Road') {
-								tempObj.mount.bottom = BuildingMaker.prototype.getObject(building.coords);
-								tempObj.mount.bottom.mount.top = tempObj;
+							building.mount.top = building.addMount('Road', 'top', temp.coords);
+							if (!!building.mount.top) {
+								building.mount.top.mount.bottom = building;
 							}
-						}
-						if(!BuildingMaker.prototype.isEmpty({
-								positionXBegin: building.coords.positionXBegin,
-								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin + 1,
-								positionYEnd: building.coords.positionYEnd + 1
-							})){
-							tempObj = BuildingMaker.prototype.getObject({
-								positionXBegin: building.coords.positionXBegin,
-								positionXEnd: building.coords.positionXEnd,
-								positionYBegin: building.coords.positionYBegin + 1,
-								positionYEnd: building.coords.positionYEnd + 1
-							});
-							if(tempObj.type == 'Road') {
-								tempObj.mount.top = BuildingMaker.prototype.getObject(building.coords);
-								tempObj.mount.top.mount.bottom = tempObj;
+							building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
+							if (!!building.mount.bottom) {
+								building.mount.bottom.mount.top = building;
 							}
-						}
+
+						building.save({
+							positionXBegin: temp.coords.positionXBegin,
+							positionXEnd: temp.coords.positionXEnd,
+							positionYBegin: temp.coords.positionYBegin,
+							positionYEnd: temp.coords.positionYEnd
+						});
 					}
 
-					tempObj = null;
 					width = null;
 					height = null;
 				}
@@ -402,7 +298,7 @@ var BCL = (function() {
 		if (!currentButton.state && !currentButton.mouseDown) {
 			GetCoords(ev);
 			var objectTemp = objectHover;
-			objectHover = BuildingMaker.prototype.getObject(coords);
+			objectHover = BuildingMaker.prototype.getObject('All', coords);
 			if(objectHover != null && objectHover != objectTemp) {
 				//later this will be in a table-info
 				//console.log(objectHover);
@@ -413,7 +309,7 @@ var BCL = (function() {
 		ev.preventDefault();
 		if (!currentButton.state && !currentButton.mouseDown) {
 			GetCoords(ev);
-			objectSelect = BuildingMaker.prototype.getObject(coords);
+			objectSelect = BuildingMaker.prototype.getObject('All', coords);
 			if(!!objectSelect) {
 				//later this will be in a table-info
 				console.log(objectSelect);
@@ -552,15 +448,17 @@ var BCL = (function() {
 		console.dir(objectList);
 		//localStorage['objectList'] = JSON.stringify(objectList);
 	};
-	BuildingMaker.prototype.getObject = function (coords) {
+	BuildingMaker.prototype.getObject = function (type, coords) {
 		for (var i = 0, len = objectList.length; i < len; i++) {
-			if (
-				objectList[i].coords.positionXBegin < coords.positionXEnd &&
-				objectList[i].coords.positionXEnd > coords.positionXBegin &&
-				objectList[i].coords.positionYEnd > coords.positionYBegin &&
-				objectList[i].coords.positionYBegin < coords.positionYEnd
-			) {
-				return objectList[i];
+			if(objectList[i].type == type ||  type == 'All') {
+				if (
+					objectList[i].coords.positionXBegin < coords.positionXEnd &&
+					objectList[i].coords.positionXEnd > coords.positionXBegin &&
+					objectList[i].coords.positionYEnd > coords.positionYBegin &&
+					objectList[i].coords.positionYBegin < coords.positionYEnd
+				) {
+					return objectList[i];
+				}
 			}
 		}
 		return null;
@@ -592,6 +490,50 @@ var BCL = (function() {
 			}
 		}
 		return true;
+	};
+	//BuildingMaker.prototype.isRoad = function(coords){
+	//	temp.object = BuildingMaker.prototype.getObject('Road', coords);
+	//};
+	BuildingMaker.prototype.addMount = function(type, place, coords){
+		temp.object = BuildingMaker.prototype.getObject(type, coords);
+		var x = 0,
+			y = 0;
+
+		if(!temp.object){
+			switch (place) {
+				case 'left':
+				{
+					x = -1;
+					break;
+				}
+				case 'right':
+				{
+					x = 1;
+					break;
+				}
+				case 'top':
+				{
+					y = -1;
+					break;
+				}
+				case 'bottom':
+				{
+					y = 1;
+					break;
+				}
+			}
+
+			return BuildingMaker.prototype.getObject(type, {
+				positionXBegin: coords.positionXBegin + x,
+				positionXEnd: coords.positionXEnd + x,
+				positionYBegin: coords.positionYBegin + y,
+				positionYEnd: coords.positionYEnd + y
+			});
+		}
+
+		temp.object = {};
+		temp.coords = {};
+		return null;
 	};
 
 	BuildingMaker.factory = function (type, lvl) {
