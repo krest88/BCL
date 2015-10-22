@@ -111,7 +111,7 @@ var BCL = (function() {
 		ev.preventDefault();
 		if(currentButton.state){
 			GetCoords(ev);
-			BuildingMaker.prototype.removeObject(coords);
+			BuildingMaker.prototype.removeObject(BuildingMaker.prototype.getObject('All', coords).type, coords);
 
 			currentButton.state = false;
 			RemoveEvent(canvas, "click", Remove);
@@ -148,6 +148,79 @@ var BCL = (function() {
 				}
 			}
 		}
+	}
+
+	function BuildRoad(){
+		var width = coords.positionXEnd - coords.positionXBegin;
+		var height = coords.positionYEnd - coords.positionYBegin;
+		temp.coords.positionXBegin = coords.positionXBegin;
+		temp.coords.positionXEnd = coords.positionXEnd;
+		temp.coords.positionYBegin = coords.positionYBegin;
+		temp.coords.positionYEnd = coords.positionYEnd;
+
+
+		for (var i = 0, len = width == 1? height: width; i < len; i++) {
+			building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
+
+			if(width > height){
+				temp.coords.positionXBegin = coords.positionXBegin + i;
+				temp.coords.positionXEnd = coords.positionXBegin + i + 1;
+
+				if(i!=0 && i!=(len-1)){
+					building.mount.left = building.addMount('Road', 'left', temp.coords);
+					building.mount.right = building.addMount('Road', 'right', temp.coords);
+				}
+				else if(i==0){
+					building.mount.right = building.addMount('Road', 'right', temp.coords);
+				}
+				else{
+					building.mount.left = building.addMount('Road', 'left', temp.coords);
+				}
+			}
+			else if(width < height){
+				temp.coords.positionYBegin = coords.positionYBegin + i;
+				temp.coords.positionYEnd = coords.positionYBegin + i + 1;
+
+
+				if(i!=0 && i!=(len-1)){
+					building.mount.top = building.addMount('Road', 'top', temp.coords);
+					building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
+				}
+				else if(i==0){
+					building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
+				}
+				else{
+					building.mount.top = building.addMount('Road', 'top', temp.coords);
+				}
+			}
+
+			building.mount.right = building.addMount('Road', 'right', temp.coords);
+			if (!!building.mount.right) {
+				building.mount.right.mount.left = building;
+			}
+			building.mount.left = building.addMount('Road', 'left', temp.coords);
+			if (!!building.mount.left) {
+				building.mount.left.mount.right = building;
+			}
+			building.mount.top = building.addMount('Road', 'top', temp.coords);
+			if (!!building.mount.top) {
+				building.mount.top.mount.bottom = building;
+			}
+			building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
+			if (!!building.mount.bottom) {
+				building.mount.bottom.mount.top = building;
+			}
+
+			building.save({
+				positionXBegin: temp.coords.positionXBegin,
+				positionXEnd: temp.coords.positionXEnd,
+				positionYBegin: temp.coords.positionYBegin,
+				positionYEnd: temp.coords.positionYEnd
+			});
+		}
+
+		width = null;
+		height = null;
 	}
 
 //<editor-fold desc="Handlers">
@@ -206,76 +279,7 @@ var BCL = (function() {
 					building.save(coords);
 				}
 				else{
-					var width = coords.positionXEnd - coords.positionXBegin;
-					var height = coords.positionYEnd - coords.positionYBegin;
-					temp.coords.positionXBegin = coords.positionXBegin;
-					temp.coords.positionXEnd = coords.positionXEnd;
-					temp.coords.positionYBegin = coords.positionYBegin;
-					temp.coords.positionYEnd = coords.positionYEnd;
-
-
-					for (var i = 0, len = width == 1? height: width; i < len; i++) {
-						building = BuildingMaker.factory(currentButton.cellType, currentButton.buildingLevel);
-
-						if(width > height){
-							temp.coords.positionXBegin = coords.positionXBegin + i;
-							temp.coords.positionXEnd = coords.positionXBegin + i + 1;
-
-							if(i!=0 && i!=(len-1)){
-								building.mount.left = building.addMount('Road', 'left', temp.coords);
-								building.mount.right = building.addMount('Road', 'right', temp.coords);
-							}
-							else if(i==0){
-								building.mount.right = building.addMount('Road', 'right', temp.coords);
-							}
-							else{
-								building.mount.left = building.addMount('Road', 'left', temp.coords);
-							}
-						}
-						else if(width < height){
-							temp.coords.positionYBegin = coords.positionYBegin + i;
-							temp.coords.positionYEnd = coords.positionYBegin + i + 1;
-
-
-							if(i!=0 && i!=(len-1)){
-								building.mount.top = building.addMount('Road', 'top', temp.coords);
-								building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
-							}
-							else if(i==0){
-								building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
-							}
-							else{
-								building.mount.top = building.addMount('Road', 'top', temp.coords);
-							}
-						}
-
-							building.mount.right = building.addMount('Road', 'right', temp.coords);
-							if (!!building.mount.right) {
-								building.mount.right.mount.left = building;
-							}
-							building.mount.left = building.addMount('Road', 'left', temp.coords);
-							if (!!building.mount.left) {
-								building.mount.left.mount.right = building;
-							}
-							building.mount.top = building.addMount('Road', 'top', temp.coords);
-							if (!!building.mount.top) {
-								building.mount.top.mount.bottom = building;
-							}
-							building.mount.bottom = building.addMount('Road', 'bottom', temp.coords);
-							if (!!building.mount.bottom) {
-								building.mount.bottom.mount.top = building;
-							}
-
-						building.save({
-							positionXBegin: temp.coords.positionXBegin,
-							positionXEnd: temp.coords.positionXEnd,
-							positionYBegin: temp.coords.positionYBegin,
-							positionYEnd: temp.coords.positionYEnd
-						});
-					}
-
-					width = null;
-					height = null;
+					BuildRoad();
 				}
 			}
 			else {
@@ -405,6 +409,25 @@ var BCL = (function() {
 	//	objectList = [];
 	//}
 
+	function removeMount(object) {
+		if(object.mount.bottom !== null){
+			object.mount.bottom.mount.up = null;
+			object.mount.bottom = null;
+		}
+		if(object.mount.top !== null){
+			object.mount.top.mount.bottom = null;
+			object.mount.top = null;
+		}
+		if(object.mount.left !== null){
+			object.mount.left.mount.right = null;
+			object.mount.left = null;
+		}
+		if(object.mount.right !== null){
+			object.mount.right.mount.left = null;
+			object.mount.right = null;
+		}
+	}
+
 	function BuildingMaker() {}
 	BuildingMaker.prototype.cellsInfo = {
 		'House': {
@@ -463,16 +486,21 @@ var BCL = (function() {
 		}
 		return null;
 	};
-	BuildingMaker.prototype.removeObject = function(coords){
+	BuildingMaker.prototype.removeObject = function(type, coords){
 		for (var i = 0, len = objectList.length; i < len; i++) {
-			if (
-				objectList[i].coords.positionXBegin < coords.positionXEnd &&
-				objectList[i].coords.positionXEnd > coords.positionXBegin &&
-				objectList[i].coords.positionYEnd > coords.positionYBegin &&
-				objectList[i].coords.positionYBegin < coords.positionYEnd
-			) {
-				objectList.splice(i, 1);
-				return true;
+			if(objectList[i].type == type ||  type == 'All') {
+				if (
+					objectList[i].coords.positionXBegin < coords.positionXEnd &&
+					objectList[i].coords.positionXEnd > coords.positionXBegin &&
+					objectList[i].coords.positionYEnd > coords.positionYBegin &&
+					objectList[i].coords.positionYBegin < coords.positionYEnd
+				) {
+					if(type == 'Road'){
+						removeMount(objectList[i]);
+					}
+					objectList.splice(i, 1);
+					return true;
+				}
 			}
 		}
 		return false;
